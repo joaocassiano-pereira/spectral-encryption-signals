@@ -461,10 +461,13 @@ def run_experiment():
 
     nonce_bits_base = "1111000011110001111100101111001111110100111101011111011011110111"
 
+    # Uma única chave AES é gerada para todo o experimento e reutilizada em
+    # todas as mensagens. A diferenciação criptográfica entre as rodadas é
+    # feita pelo contador do AES-CTR, e não pela geração de uma nova chave.
+    key_bits = "".join(map(str, fun.generate_random_bits(256)))
+
     for word_index in range(NUM_WORDS):
         original_bits = fun.generate_random_bits(NUM_BITS)
-        key_bits = "".join(map(str, fun.generate_random_bits(256)))
-        counter_bits = fun.int_to_64bit_string(word_index)
 
         # 1) Modulação e Filtro RCF
         signal_before, signal_after_rcf, time_vector = fun.modulate_16qam_natural_for_spectra(
@@ -490,6 +493,17 @@ def run_experiment():
         # 3) Bins centrais
         ncs, n1, n2 = fun.calculate_center_bin_count(num_samples, SPS, ROLLOFF)
         center_positions, _, _ = fun.central_indices_from_ncs(num_samples, ncs)
+
+        # Cada mensagem consome vários blocos AES de 128 bits. Para reutilizar
+        # a mesma chave sem repetir blocos do fluxo CTR, cada rodada recebe
+        # uma faixa própria e não sobreposta de valores de contador.
+        blocks_per_word = int(np.ceil((ncs * BITS_PER_PHASE) / 128.0))
+        counter_start = word_index * blocks_per_word
+        counter_bits = fun.int_to_64bit_string(counter_start)
+
+        # Como counter_start é calculado diretamente a partir de word_index,
+        # as rodadas não dependem da saída da rodada anterior. Isso preserva
+        # a possibilidade de processamento paralelo entre diferentes blocos.
 
         # 4) Fases do AES
         key_phases, _ = fun.aes_phase_levels_from_ctr(
