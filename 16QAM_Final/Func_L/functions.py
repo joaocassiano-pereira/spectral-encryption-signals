@@ -58,6 +58,8 @@ def aes_ctr_keystream_bits(key_bits, nonce_bits, counter_bits, num_bits):
 
     Aqui o AES não é usado para guardar uma mensagem textual. Ele serve para
     gerar uma sequência controlada pela chave, pelo nonce e pelo contador.
+    A mesma chave AES pode ser reutilizada em diferentes mensagens, desde que
+    não se repita a mesma combinação de nonce e valores de contador.
     Essa sequência depois vira a chave de fase do método espectral.
     """
     key_bytes = bits_to_bytes(key_bits)
