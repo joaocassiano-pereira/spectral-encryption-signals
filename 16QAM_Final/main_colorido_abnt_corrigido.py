@@ -425,7 +425,6 @@ def plot_article_style_figure(results):
         else:
             ax_spec.set_ylabel("")
 
-        # Constelação com bolinhas coloridas (scatter), como nos seus gráficos antigos.
         for j, symbols in enumerate(constellation_rounds):
             if len(symbols) == 0:
                 continue
